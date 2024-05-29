@@ -5,70 +5,86 @@ import (
 	"os"
 	"sync"
 
-	"github.com/bart-jaskulski/feed/feed"
-	"github.com/bart-jaskulski/feed/fileutil"
-	"github.com/bart-jaskulski/feed/ranking"
-	"github.com/bart-jaskulski/feed/config"
+	"github.com/bart-jaskulski/mfeed/config"
+	"github.com/bart-jaskulski/mfeed/feed"
+	"github.com/bart-jaskulski/mfeed/fileutil"
+	"github.com/bart-jaskulski/mfeed/ranking"
 )
 
 func main() {
-  config := config.DefaultConfig()
+	cfg := config.NewConfig()
 
-	feedURLs, err := fileutil.ReadLines(config.FeedsFile)
-	if err != nil {
-		log.Fatalf("Error reading feed URLs from file: %v", err)
+	urls, readErr := fileutil.ReadLines(cfg.FeedsFilePath)
+	if readErr != nil {
+		log.Fatalf("error reading feed URLs: %v", readErr)
 	}
 
-	if len(feedURLs) == 0 {
-		log.Fatalf("No feed URLs found in file")
+	if len(urls) == 0 {
+		log.Fatalf("no feed URLs found")
 	}
 
 	var wg sync.WaitGroup
-	rankingsChan := make(chan ranking.Ranking, len(feedURLs))
+	rankingsChan := make(chan ranking.Ranking, len(urls))
 
-	for _, url := range feedURLs {
+	for _, url := range urls {
 		wg.Add(1)
-		go fetchAndRankFeed(url, &wg, rankingsChan, &config)
+		go func(feedURL string) {
+			defer wg.Done()
+			rank, err := processFeed(feedURL, &cfg)
+			if err != nil {
+        log.Printf("error generating feed: %v", err)
+				return
+			}
+			if len(rank.Items) > 0 {
+				rankingsChan <- rank
+			}
+		}(url)
 	}
 
 	wg.Wait()
 	close(rankingsChan)
 
-  metaRanking := ranking.CombineRankings(rankingsChan...)
-  metaRanking.Rank(&config)
+	var allRankings []ranking.Ranking
+	for rank := range rankingsChan {
+		allRankings = append(allRankings, rank)
+	}
+
+	if len(allRankings) == 0 {
+		log.Fatalf("no valid rankings found")
+	}
+
+	metaRanking := ranking.CombineRankings(allRankings...)
+	if processErr := metaRanking.QuickRank(&cfg); processErr != nil {
+		log.Fatalf("error during ranking process: %v", processErr)
+	}
 
 	if len(metaRanking.Items) == 0 {
-		log.Fatalf("No new items")
+		log.Fatalf("no new items after ranking")
 	}
 
-	// Generate the RSS feed file
-	rssContent, err := feed.GenerateAtom(metaRanking.Items)
-	if err != nil {
-		log.Fatalf("Error generating RSS: %v", err)
+	// Output the combined and ranked RSS feed
+	feed, genErr := feed.GenerateFeed(metaRanking.Items)
+	if genErr != nil {
+		log.Fatalf("error generating feed: %v", genErr)
 	}
 
-	os.Stdout.Write([]byte(rssContent))
+	os.Stdout.Write([]byte(feed))
 }
 
-func fetchAndRankFeed(url string, wg *sync.WaitGroup, rankingsChan chan<- ranking.Ranking, config *config.Config) {
-	defer wg.Done()
-
-	items, err := feed.FetchFeed(url)
-	if err != nil {
-		log.Printf("Error fetching feed %s: %v", url, err)
-		return
+func processFeed(feedURL string, cfg *config.Config) (ranking.Ranking, error) {
+	items, fetchErr := feed.FetchFeed(feedURL, cfg.HistoricalDate)
+	if fetchErr != nil {
+		return ranking.Ranking{}, fetchErr
 	}
 
 	if len(items) == 0 {
-		return
+		return ranking.Ranking{}, nil
 	}
 
-  ranking := ranking.Ranking{Items: items}
-  err = ranking.Rank(config)
-	if err != nil {
-		log.Printf("Error ranking items for feed %s: %v", url, err)
-		return
+	feedRanking := ranking.Ranking{Items: items}
+	if rankErr := feedRanking.Rank(cfg); rankErr != nil {
+		return ranking.Ranking{}, rankErr
 	}
 
-	rankingsChan <- ranking
+	return feedRanking, nil
 }

@@ -9,24 +9,38 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/bart-jaskulski/feed/feed"
+	"github.com/bart-jaskulski/mfeed/feed"
+	"github.com/bart-jaskulski/mfeed/config"
 	openai "github.com/sashabaranov/go-openai"
 )
 
-// OpenAIClient wraps the OpenAI API client
-type OpenAIClient struct {
+// LLMClient wraps the OpenAI API client
+type LLMClient struct {
 	client *openai.Client
+  config *config.Config
 }
 
 // NewOpenAIClient creates a new OpenAI client
-func NewOpenAIClient() *OpenAIClient {
-	apiKey := os.Getenv("GROQ_API_KEY")
-	if apiKey == "" {
-		log.Fatalf("GROQ_API_KEY environment variable not set")
+func NewOpenAIClient(cfg *config.Config) *LLMClient {
+	apiKey, err := fetchAPIKey()
+	if err != nil {
+		log.Fatalf("failed to get API key: %v", err)
 	}
 	config := openai.DefaultConfig(apiKey)
-	config.BaseURL = "https://api.groq.com/openai/v1"
-	return &OpenAIClient{openai.NewClientWithConfig(config)}
+	config.BaseURL = cfg.OpenAIEndpoint
+  return &LLMClient{
+    client: openai.NewClientWithConfig(config),
+    config: cfg,
+  }
+}
+
+// fetchAPIKey retrieves the API key from environment variables
+func fetchAPIKey() (string, error) {
+	apiKey := os.Getenv("GROQ_API_KEY")
+	if apiKey == "" {
+		return "", fmt.Errorf("GROQ_API_KEY environment variable not set")
+	}
+	return apiKey, nil
 }
 
 type Scoring struct {
@@ -39,7 +53,7 @@ type ItemScore struct {
 }
 
 // ScoreArticles sends item titles to OpenAI API for scoring
-func (c *OpenAIClient) ScoreArticles(items []feed.FeedItem) ([]feed.FeedItem, error) {
+func (c *LLMClient) ScoreArticles(items []feed.FeedItem) ([]feed.FeedItem, error) {
 	ctx := context.Background()
 
 	rankPrompt, err := preparePrompt("prompts/rank.tmpl", nil)
@@ -58,7 +72,7 @@ func (c *OpenAIClient) ScoreArticles(items []feed.FeedItem) ([]feed.FeedItem, er
 	}
 
 	req := openai.ChatCompletionRequest{
-		Model: "llama3-70b-8192",
+		Model: c.config.LLMModel,
 		Messages: []openai.ChatCompletionMessage{
 			{
 				Role:    "system",
@@ -78,14 +92,14 @@ func (c *OpenAIClient) ScoreArticles(items []feed.FeedItem) ([]feed.FeedItem, er
 
 	resp, err := c.client.CreateChatCompletion(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create chat completion: %w", err)
 	}
 
 	var scores Scoring
 
 	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &scores)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal scoring response: %w", err)
 	}
 
 	for i := range items {
@@ -108,7 +122,7 @@ func preparePrompt(promptFile string, data interface{}) (string, error) {
 	tmplBuffer := bytes.Buffer{}
 	err = tmpl.Execute(&tmplBuffer, data)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to execute template: %w", err)
 	}
 	return tmplBuffer.String(), nil
 }

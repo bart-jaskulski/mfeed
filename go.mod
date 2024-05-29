@@ -1,4 +1,4 @@
-module github.com/bart-jaskulski/feed
+module github.com/bart-jaskulski/mfeed
 
 go 1.21.1
 

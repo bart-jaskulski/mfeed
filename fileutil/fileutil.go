@@ -2,6 +2,7 @@ package fileutil
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 )
 
@@ -9,7 +10,7 @@ import (
 func ReadLines(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open file %s: %w", filename, err)
 	}
 	defer file.Close()
 
@@ -23,7 +24,7 @@ func ReadLines(filename string) ([]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error scanning file %s: %w", filename, err)
 	}
 
 	return lines, nil

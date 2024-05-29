@@ -2,14 +2,28 @@ package feed
 
 import (
 	"encoding/xml"
+	"errors"
 	"time"
 )
 
-// GenerateAtom generates an Atom feed with the top-ranked items
-func GenerateAtom(items []FeedItem) (string, error) {
+// GenerateFeed generates an Atom feed with the top-ranked items
+func GenerateFeed(items []FeedItem) (string, error) {
+	if len(items) == 0 {
+		return "", errors.New("no items to process")
+	}
+
+	feed := createAtomFeed(items)
+	output, err := xml.MarshalIndent(feed, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return xml.Header + string(output), nil
+}
+
+func createAtomFeed(items []FeedItem) Feed {
 	feed := Feed{
 		Xmlns: "http://www.w3.org/2005/Atom",
-		Title: "Aggregated Feed",
+		Title: "Aggregation of Most Interesting Feeds",
 		Link: struct {
 			Href string `xml:"href,attr"`
 		}{
@@ -18,7 +32,7 @@ func GenerateAtom(items []FeedItem) (string, error) {
 		Updated: time.Now().Format(time.RFC3339),
 		ID:      "http://example.com",
 		Author: AtomAuthor{
-			Name: "Aggregated Feed Author",
+			Name: "Author",
 		},
 	}
 
@@ -40,10 +54,5 @@ func GenerateAtom(items []FeedItem) (string, error) {
 		}
 		feed.Entry = append(feed.Entry, entry)
 	}
-
-	output, err := xml.MarshalIndent(feed, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return xml.Header + string(output), nil
+	return feed
 }

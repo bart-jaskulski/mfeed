@@ -4,22 +4,24 @@ import (
 	"time"
 )
 
+const DefaultLookBackDays = -7 // Constant look-back days
+
 type Config struct {
-	Model         string
-	FeedsFile     string
-	OpenAIBaseUrl string
-	FeedLimit     int
-	LookBackDate  time.Time
-	RankDropout   int
+	LLMModel       string
+	FeedsFilePath  string
+	OpenAIEndpoint string
+	MaxFeeds       int
+	HistoricalDate time.Time
+	MinimumRank    int
 }
 
-func DefaultConfig() Config {
+func NewConfig() Config {
 	return Config{
-		Model:         "llama3-70b-8192",
-		OpenAIBaseUrl: "https://api.groq.com/openai/v1",
-		FeedsFile:     "feeds",
-		FeedLimit:     20,
-		LookBackDate:  time.Now().AddDate(0, 0, -7),
-		RankDropout:   2,
+		LLMModel:       "llama3-70b-8192",
+		OpenAIEndpoint: "https://api.groq.com/openai/v1",
+		FeedsFilePath:  "feeds",
+		MaxFeeds:       20,
+		HistoricalDate: time.Now().AddDate(0, 0, DefaultLookBackDays),
+		MinimumRank:    3,
 	}
 }
