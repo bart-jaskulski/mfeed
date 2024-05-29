@@ -22,19 +22,14 @@ jobs:
       run: |
         mkdir build
         go run main.go > ./build/feed
-        tar \
-          --directory build \
-        -cvf "$RUNNER_TEMP\artifact.tar" \
-        "."
       env:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
     - name: Upload artifact
       id: upload-artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-pages-artifact@v3
       with:
-        path: ${{ runner.temp }}/artifact.tar
-        if-no-files-found: error
+        path: build
 
   deploy:
     needs: build
