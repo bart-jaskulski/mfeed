@@ -6,7 +6,7 @@ on:
     - cron: '0 6 * * 1'  # Runs at 06:00 AM every Monday
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,13 +19,35 @@ jobs:
         go-version: '1.21'
 
     - name: Run Go script
-      run: go run main.go > ./build/feed
+      run: |
+        go run main.go > ./build/feed
+        tar \
+          --directory build \
+        -cvf "$RUNNER_TEMP\artifact.tar" \
+        "."
       env:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
-    - name: Deploy to GitHub Pages
-      uses: actions/deploy-pages@v1
+    - name: Upload artifact
+      id: upload-artifact
+      uses: actions/upload-artifact@v4
       with:
-        build_dir: ./  # The directory where atom.xml is generated
-        pages_token: ${{ secrets.GITHUB_TOKEN }}
+        path: ${{ runner.temp }}/artifact.tar
+        if-no-files-found: error
 
+  deploy:
+    needs: build
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
