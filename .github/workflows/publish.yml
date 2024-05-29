@@ -20,6 +20,7 @@ jobs:
 
     - name: Run Go script
       run: |
+        mkdir build
         go run main.go > ./build/feed
         tar \
           --directory build \
