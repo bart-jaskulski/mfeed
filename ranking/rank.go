@@ -62,7 +62,7 @@ func (r *Ranking) sortItems() {
 func (r *Ranking) dropUninterestingItems(cfg *config.Config) {
 	var filteredItems []feed.FeedItem
 	for _, item := range r.Items {
-		if item.Rank > cfg.MinimumRank {
+		if item.Rank >= cfg.MinimumRank {
 			filteredItems = append(filteredItems, item)
 		}
 	}
