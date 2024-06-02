@@ -114,6 +114,54 @@ func (c *LLMClient) ScoreArticles(items []feed.FeedItem) ([]feed.FeedItem, error
 	return items, nil
 }
 
+func (c *LLMClient) SummarizeContent(content string) (string, error) {
+	ctx := context.Background()
+
+	data := struct {
+		Content string
+	}{
+		Content: content,
+	}
+	summaryPrompt, err := preparePrompt("prompts/summarize.tmpl", data)
+	if err != nil {
+		return "", fmt.Errorf("failed to prepare prompt: %w", err)
+	}
+
+	req := openai.ChatCompletionRequest{
+		Model: c.config.LLMModel,
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role:    "system",
+				Content: summaryPrompt,
+			},
+			{
+				Role:    "user",
+				Content: content,
+			},
+		},
+		ResponseFormat: &openai.ChatCompletionResponseFormat{
+			Type: "json_object",
+		},
+		Temperature: 0.5,
+		MaxTokens:   800,
+	}
+
+	resp, err := c.client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to create chat completion: %w", err)
+	}
+
+	var summary struct {
+		Summary string `json:"summary"`
+	}
+	err = json.Unmarshal([]byte(resp.Choices[0].Message.Content), &summary)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal scoring response: %w", err)
+	}
+
+	return summary.Summary, nil
+}
+
 func preparePrompt(promptFile string, data interface{}) (string, error) {
 	tmpl, err := template.ParseFiles(promptFile)
 	if err != nil {

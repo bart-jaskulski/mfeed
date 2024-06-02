@@ -72,6 +72,10 @@ func main() {
 
 		feedItem.Content = createContent(feedItem, &cfg)
 
+		if feedItem.Rank == cfg.MinimumRank {
+			feedItem.Content = createSummary(feedItem, &cfg)
+		}
+
 		metaRanking.Items[i].Content = feedItem.Content
 	}
 
@@ -92,6 +96,16 @@ func createContent(feedItem feed.FeedItem, cfg *config.Config) string {
 	}
 
 	return art.Content
+}
+
+func createSummary(feedItem feed.FeedItem, cfg *config.Config) string {
+	ai := ranking.NewOpenAIClient(cfg)
+	summary, err := ai.SummarizeContent(feedItem.Content)
+	if err != nil {
+		log.Printf("error summarizing content: %v", err)
+		return ""
+	}
+	return summary
 }
 
 func processFeed(feedURL string, cfg *config.Config) (ranking.Ranking, error) {
