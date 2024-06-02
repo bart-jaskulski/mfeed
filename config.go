@@ -25,7 +25,7 @@ func defaultConfig() Config {
 	return Config{
 		LLMModel:       "llama3-70b-8192",
 		OpenAIEndpoint: "https://api.groq.com/openai/v1",
-		FeedsFilePath:  "_feeds",
+		FeedsFilePath:  "feeds",
 		MaxFeeds:       120,
 		HistoricalDate: time.Now().AddDate(0, 0, DefaultLookBackDays),
 		MinimalScore:   3,

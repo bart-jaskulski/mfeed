@@ -77,7 +77,7 @@ func createAtomFeed(ranking Ranking) Feed {
 
 		item.Content = fetchContent(item)
 
-		if item.Content != "" && item.Score == cfg.MinimalScore {
+		if false && item.Content != "" && item.Score == cfg.MinimalScore {
 			item.Content = createSummary(item, cfg)
 		}
 

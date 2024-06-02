@@ -43,7 +43,7 @@ func main() {
 		wg.Add(1)
 		go func(feedURL string) {
 			defer wg.Done()
-			rank, err := processFeed(feedURL, cfg)
+			rank, err := processFeed(feedURL)
 			if err != nil {
 				log.Printf("error generating feed: %v", err)
 				return
