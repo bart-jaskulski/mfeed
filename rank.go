@@ -31,16 +31,6 @@ func (r *Ranking) Rank(cfg Config) error {
 	return nil
 }
 
-func (r *Ranking) QuickRank(cfg Config) error {
-	if r.Len() == 0 {
-		return fmt.Errorf("no items to rank")
-	}
-
-	r.dropUninterestingItems(cfg)
-
-	return nil
-}
-
 func (r *Ranking) sortItems() {
 	sort.Slice(r.Articles, func(i, j int) bool {
 		return r.Articles[i].Score > r.Articles[j].Score

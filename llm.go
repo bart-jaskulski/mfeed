@@ -37,8 +37,8 @@ type Scoring struct {
 }
 
 type ItemScore struct {
-	ID    int     `json:"id"`
-	Score float64 `json:"score"`
+	ID    int `json:"id"`
+	Score int `json:"score"`
 }
 
 // ScoreArticles sends item titles to OpenAI API for scoring
@@ -76,7 +76,7 @@ func (c *LLMClient) ScoreArticles(items []FeedItem) ([]FeedItem, error) {
 			Type: "json_object",
 		},
 		Temperature: 0.0,
-		MaxTokens:   1000,
+		MaxTokens:   1500,
 	}
 
 	resp, err := c.client.CreateChatCompletion(ctx, req)
@@ -93,7 +93,7 @@ func (c *LLMClient) ScoreArticles(items []FeedItem) ([]FeedItem, error) {
 	for i := range items {
 		for _, score := range scores.Articles {
 			if items[i].ID == score.ID {
-				items[i].Score = int(score.Score)
+				items[i].Score = score.Score
 				break
 			}
 		}

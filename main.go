@@ -62,6 +62,10 @@ func main() {
 		metaRanking.Articles = append(metaRanking.Articles, rank.Articles...)
 	}
 
+	if mErr := metaRanking.Rank(cfg); mErr != nil {
+		log.Fatalf("error ranking meta feed: %v", mErr)
+	}
+
 	if metaRanking.Len() == 0 {
 		log.Fatalf("no new items after ranking")
 	}
