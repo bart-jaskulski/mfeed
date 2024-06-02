@@ -5,18 +5,29 @@ import (
 	"os"
 	"sync"
 	"time"
+)
 
-	"github.com/bart-jaskulski/mfeed/config"
-	"github.com/bart-jaskulski/mfeed/feed"
-	"github.com/bart-jaskulski/mfeed/fileutil"
-	"github.com/bart-jaskulski/mfeed/ranking"
-	readability "github.com/go-shiori/go-readability"
+var (
+	cfg  = defaultConfig()
+	feed = Feed{
+		Xmlns:     "http://www.w3.org/2005/Atom",
+		Title:     cfg.FeedTitle,
+		Generator: "mfeed",
+		Link: struct {
+			Href string `xml:"href,attr"`
+		}{
+			Href: cfg.FeedHref,
+		},
+		Updated: time.Now().Format(time.RFC3339),
+		ID:      cfg.FeedHref,
+		Author: author{
+			Name: cfg.FeedAuthor,
+		},
+	}
 )
 
 func main() {
-	cfg := config.NewConfig()
-
-	urls, readErr := fileutil.ReadLines(cfg.FeedsFilePath)
+	urls, readErr := readFeedsFile(cfg.FeedsFilePath)
 	if readErr != nil {
 		log.Fatalf("error reading feed URLs: %v", readErr)
 	}
@@ -26,18 +37,18 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	rankingsChan := make(chan ranking.Ranking, len(urls))
+	rankingsChan := make(chan Ranking, len(urls))
 
 	for _, url := range urls {
 		wg.Add(1)
 		go func(feedURL string) {
 			defer wg.Done()
-			rank, err := processFeed(feedURL, &cfg)
+			rank, err := processFeed(feedURL, cfg)
 			if err != nil {
-        log.Printf("error generating feed: %v", err)
+				log.Printf("error generating feed: %v", err)
 				return
 			}
-			if len(rank.Items) > 0 {
+			if rank.Len() > 0 {
 				rankingsChan <- rank
 			}
 		}(url)
@@ -46,41 +57,20 @@ func main() {
 	wg.Wait()
 	close(rankingsChan)
 
-	var allRankings []ranking.Ranking
+	var metaRanking Ranking
 	for rank := range rankingsChan {
-		allRankings = append(allRankings, rank)
+		metaRanking.Articles = append(metaRanking.Articles, rank.Articles...)
 	}
 
-	if len(allRankings) == 0 {
-		log.Fatalf("no valid rankings found")
-	}
-
-	metaRanking := ranking.CombineRankings(allRankings...)
-	if processErr := metaRanking.QuickRank(&cfg); processErr != nil {
+	if processErr := metaRanking.QuickRank(cfg); processErr != nil {
 		log.Fatalf("error during ranking process: %v", processErr)
 	}
 
-	if len(metaRanking.Items) == 0 {
+	if metaRanking.Len() == 0 {
 		log.Fatalf("no new items after ranking")
 	}
 
-	for i, feedItem := range metaRanking.Items {
-		if feedItem.Content != "" {
-			// content already available
-			continue
-		}
-
-		feedItem.Content = createContent(feedItem, &cfg)
-
-		if feedItem.Rank == cfg.MinimumRank {
-			feedItem.Content = createSummary(feedItem, &cfg)
-		}
-
-		metaRanking.Items[i].Content = feedItem.Content
-	}
-
-	// Output the combined and ranked RSS feed
-	feed, genErr := feed.GenerateFeed(metaRanking.Items)
+	feed, genErr := GenerateFeed(metaRanking)
 	if genErr != nil {
 		log.Fatalf("error generating feed: %v", genErr)
 	}
@@ -88,39 +78,19 @@ func main() {
 	os.Stdout.Write([]byte(feed))
 }
 
-func createContent(feedItem feed.FeedItem, cfg *config.Config) string {
-	art, err := readability.FromURL(feedItem.Link, 30*time.Second)
-	if err != nil {
-		log.Printf("error fetching article: %v", err)
-		return ""
-	}
-
-	return art.Content
-}
-
-func createSummary(feedItem feed.FeedItem, cfg *config.Config) string {
-	ai := ranking.NewOpenAIClient(cfg)
-	summary, err := ai.SummarizeContent(feedItem.Content)
-	if err != nil {
-		log.Printf("error summarizing content: %v", err)
-		return ""
-	}
-	return summary
-}
-
-func processFeed(feedURL string, cfg *config.Config) (ranking.Ranking, error) {
-	items, fetchErr := feed.FetchFeed(feedURL, cfg.HistoricalDate)
+func processFeed(feedURL string, cfg *Config) (Ranking, error) {
+	items, fetchErr := FetchFeed(feedURL, cfg.HistoricalDate)
 	if fetchErr != nil {
-		return ranking.Ranking{}, fetchErr
+		return Ranking{}, fetchErr
 	}
 
 	if len(items) == 0 {
-		return ranking.Ranking{}, nil
+		return Ranking{}, nil
 	}
 
-	feedRanking := ranking.Ranking{Items: items}
+	feedRanking := Ranking{Articles: items}
 	if rankErr := feedRanking.Rank(cfg); rankErr != nil {
-		return ranking.Ranking{}, rankErr
+		return Ranking{}, rankErr
 	}
 
 	return feedRanking, nil

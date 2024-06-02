@@ -1,4 +1,4 @@
-package feed
+package main
 
 import (
 	"errors"
@@ -18,10 +18,6 @@ func FetchFeed(url string, lookBackTime time.Time) ([]FeedItem, error) {
 	freshItems := filterNewItems(feed, lookBackTime)
 	if len(freshItems) == 0 {
 		return nil, errors.New("no new items found")
-	}
-
-	if len(freshItems) > 20 {
-		freshItems = freshItems[:20]
 	}
 
 	return freshItems, nil
