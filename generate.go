@@ -10,8 +10,6 @@ import (
 	readability "github.com/go-shiori/go-readability"
 )
 
-var ()
-
 type FeedItem struct {
 	ID      int
 	Title   string
@@ -79,7 +77,7 @@ func createAtomFeed(ranking Ranking) Feed {
 
 		item.Content = fetchContent(item)
 
-		if item.Content != "" && item.Score == cfg.MinimumRank {
+		if item.Content != "" && item.Score == cfg.MinimalScore {
 			item.Content = createSummary(item, cfg)
 		}
 

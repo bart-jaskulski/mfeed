@@ -15,7 +15,7 @@ type Config struct {
 	FeedsFilePath  string
 	MaxFeeds       int
 	HistoricalDate time.Time
-	MinimumRank    int
+	MinimalScore   int
 	FeedTitle      string
 	FeedHref       string
 	FeedAuthor     string
@@ -28,7 +28,7 @@ func defaultConfig() Config {
 		FeedsFilePath:  "_feeds",
 		MaxFeeds:       120,
 		HistoricalDate: time.Now().AddDate(0, 0, DefaultLookBackDays),
-		MinimumRank:    3,
+		MinimalScore:   3,
 		FeedTitle:      "Most interesting tech news",
 		FeedHref:       "https://bart-jaskulski.github.io/mfeed/",
 		FeedAuthor:     "Bart Jaskulski",

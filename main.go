@@ -62,20 +62,16 @@ func main() {
 		metaRanking.Articles = append(metaRanking.Articles, rank.Articles...)
 	}
 
-	if processErr := metaRanking.QuickRank(cfg); processErr != nil {
-		log.Fatalf("error during ranking process: %v", processErr)
-	}
-
 	if metaRanking.Len() == 0 {
 		log.Fatalf("no new items after ranking")
 	}
 
-	feed, genErr := GenerateFeed(metaRanking)
+	feedXML, genErr := GenerateFeed(metaRanking)
 	if genErr != nil {
 		log.Fatalf("error generating feed: %v", genErr)
 	}
 
-	os.Stdout.Write([]byte(feed))
+	os.Stdout.Write([]byte(feedXML))
 }
 
 func processFeed(feedURL string) (Ranking, error) {
