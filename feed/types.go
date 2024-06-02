@@ -6,13 +6,13 @@ import (
 )
 
 type FeedItem struct {
-	ID          int
-	Title       string
-	Link        string
-	Description string
-	Source      string
-	Updated     *time.Time
-	Rank        int
+	ID      int
+	Title   string
+	Link    string
+	Content string
+	Source  string
+	Updated *time.Time
+	Rank    int
 }
 
 type Feed struct {
@@ -31,14 +31,19 @@ type Feed struct {
 type AtomAuthor struct {
 	Name string `xml:"name"`
 }
+
 type AtomEntry struct {
 	Title string `xml:"title"`
 	Link  struct {
 		Href string `xml:"href,attr"`
 	} `xml:"link"`
-	ID      string     `xml:"id"`
-	Updated string     `xml:"updated"`
-	Summary string     `xml:"summary,omitempty"`
-	Author  AtomAuthor `xml:"author"`
-	Rank    int        `xml:"rank"`
+	ID      string      `xml:"id"`
+	Updated string      `xml:"updated"`
+	Content AtomContent `xml:"content,omitempty"`
+	Author  AtomAuthor  `xml:"author"`
+}
+
+type AtomContent struct {
+	Content string `xml:",chardata"`
+	Type    string `xml:"type,attr"`
 }

@@ -20,9 +20,9 @@ func FetchFeed(url string, lookBackTime time.Time) ([]FeedItem, error) {
 		return nil, errors.New("no new items found")
 	}
 
-  if len(freshItems) > 20 {
-    freshItems = freshItems[:20]
-  }
+	if len(freshItems) > 20 {
+		freshItems = freshItems[:20]
+	}
 
 	return freshItems, nil
 }
@@ -36,12 +36,12 @@ func filterNewItems(feed *gofeed.Feed, lookBackTime time.Time) []FeedItem {
 		}
 
 		freshItems = append(freshItems, FeedItem{
-			ID:          i,
-			Title:       item.Title,
-			Link:        item.Link,
-			Description: item.Description,
-			Source:      feed.Title,
-			Updated:     itemTime,
+			ID:      i,
+			Title:   item.Title,
+			Link:    item.Link,
+			Content: item.Content,
+			Source:  feed.Title,
+			Updated: itemTime,
 		})
 	}
 	return freshItems

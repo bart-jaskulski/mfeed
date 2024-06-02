@@ -46,11 +46,13 @@ func createAtomFeed(items []FeedItem) Feed {
 			},
 			ID:      item.Link,
 			Updated: item.Updated.Format(time.RFC3339),
-			Summary: item.Description,
+			Content: AtomContent{
+				Content: item.Content,
+				Type:    "html",
+			},
 			Author: AtomAuthor{
 				Name: item.Source,
 			},
-			Rank: item.Rank,
 		}
 		feed.Entry = append(feed.Entry, entry)
 	}
