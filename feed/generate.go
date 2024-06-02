@@ -38,7 +38,7 @@ func createAtomFeed(items []FeedItem) Feed {
 
 	for _, item := range items {
 		entry := AtomEntry{
-			Title: item.Title,
+			Title: fmt.Sprintf("[%d] %s", item.Rank, item.Title),
 			Link: struct {
 				Href string `xml:"href,attr"`
 			}{
