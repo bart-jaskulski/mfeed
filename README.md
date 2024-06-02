@@ -17,29 +17,16 @@ To install and run the Meta Feed Generator:
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/bart-jaskulski/feed.git
+   go build
    ```
 
-2. **Install Go Dependencies**:
-   Make sure Go is installed and then install the necessary packages.
-   ```bash
-   go get -u github.com/mmcdole/gofeed
-   go get -u github.com/sashabaranov/go-openai
-   ```
-
-3. **Environment Setup**:
-   Set up the required OpenAI API key.
-   ```bash
-   export GROQ_API_KEY='your_openai_api_key'
-   ```
-
-4. **Configure RSS Sources**:
+1. **Configure RSS Sources**:
    List the RSS feed URLs in the `feeds` file in the project's root directory.
 
-5. **Build and Execute**:
+1. **Build and Execute**:
    Compile and run the application.
    ```bash
-   go build -o feedGenerator ./main.go
-   ./feedGenerator
+   ./mfeed > feed.atom
    ```
 
 ## Usage
