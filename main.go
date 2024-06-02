@@ -4,11 +4,13 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/bart-jaskulski/mfeed/config"
 	"github.com/bart-jaskulski/mfeed/feed"
 	"github.com/bart-jaskulski/mfeed/fileutil"
 	"github.com/bart-jaskulski/mfeed/ranking"
+	readability "github.com/go-shiori/go-readability"
 )
 
 func main() {
@@ -62,6 +64,17 @@ func main() {
 		log.Fatalf("no new items after ranking")
 	}
 
+	for i, feedItem := range metaRanking.Items {
+		if feedItem.Content != "" {
+			// content already available
+			continue
+		}
+
+		feedItem.Content = createContent(feedItem, &cfg)
+
+		metaRanking.Items[i].Content = feedItem.Content
+	}
+
 	// Output the combined and ranked RSS feed
 	feed, genErr := feed.GenerateFeed(metaRanking.Items)
 	if genErr != nil {
@@ -69,6 +82,16 @@ func main() {
 	}
 
 	os.Stdout.Write([]byte(feed))
+}
+
+func createContent(feedItem feed.FeedItem, cfg *config.Config) string {
+	art, err := readability.FromURL(feedItem.Link, 30*time.Second)
+	if err != nil {
+		log.Printf("error fetching article: %v", err)
+		return ""
+	}
+
+	return art.Content
 }
 
 func processFeed(feedURL string, cfg *config.Config) (ranking.Ranking, error) {
