@@ -27,8 +27,6 @@ func (r *Ranking) Rank(cfg Config) error {
 
 	r.Articles = scoredItems
 	r.dropUninterestingItems(cfg)
-	r.sortItems()
-	r.Articles = r.pickTopItems(cfg)
 
 	return nil
 }
@@ -39,8 +37,6 @@ func (r *Ranking) QuickRank(cfg Config) error {
 	}
 
 	r.dropUninterestingItems(cfg)
-	r.sortItems()
-	r.Articles = r.pickTopItems(cfg)
 
 	return nil
 }
@@ -64,6 +60,7 @@ func (r *Ranking) dropUninterestingItems(cfg Config) {
 func (r *Ranking) pickTopItems(cfg Config) []FeedItem {
 	topItems := r.Articles
 	if r.Len() > cfg.MaxFeeds {
+		r.sortItems()
 		topItems = r.Articles[:cfg.MaxFeeds]
 	}
 	return topItems
