@@ -19,6 +19,10 @@ func (r *Ranking) Rank(cfg Config) error {
 		return fmt.Errorf("no items to rank")
 	}
 
+	for i := range r.Articles {
+		r.Articles[i].ID = i
+	}
+
 	llm := NewLLMClient(cfg)
 	scoredItems, err := llm.ScoreArticles(r.Articles)
 	if err != nil {

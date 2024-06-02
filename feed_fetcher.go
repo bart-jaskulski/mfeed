@@ -25,14 +25,13 @@ func FetchFeed(url string, lookBackTime time.Time) ([]FeedItem, error) {
 
 func filterNewItems(feed *gofeed.Feed, lookBackTime time.Time) []FeedItem {
 	var freshItems []FeedItem
-	for i, item := range feed.Items {
+	for _, item := range feed.Items {
 		itemTime := extractPublishTime(item)
 		if itemTime == nil || !itemTime.After(lookBackTime) {
 			continue
 		}
 
 		freshItems = append(freshItems, FeedItem{
-			ID:      i,
 			Title:   item.Title,
 			Link:    item.Link,
 			Content: item.Content,
