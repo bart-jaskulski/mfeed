@@ -115,7 +115,7 @@ func fetchContent(feedItem FeedItem) string {
 	return art.Content
 }
 
-func createSummary(feedItem FeedItem, cfg *Config) string {
+func createSummary(feedItem FeedItem, cfg Config) string {
 	llm := NewLLMClient(cfg)
 	summary, err := llm.SummarizeContent(feedItem.Content)
 	if err != nil {

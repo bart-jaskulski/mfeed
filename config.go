@@ -21,8 +21,8 @@ type Config struct {
 	FeedAuthor     string
 }
 
-func defaultConfig() *Config {
-	return &Config{
+func defaultConfig() Config {
+	return Config{
 		LLMModel:       "llama3-70b-8192",
 		OpenAIEndpoint: "https://api.groq.com/openai/v1",
 		FeedsFilePath:  "_feeds",

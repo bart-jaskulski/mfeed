@@ -14,7 +14,7 @@ func (r *Ranking) Len() int {
 }
 
 // Rank ranks the items in the ranking
-func (r *Ranking) Rank(cfg *Config) error {
+func (r *Ranking) Rank(cfg Config) error {
 	if r.Len() == 0 {
 		return fmt.Errorf("no items to rank")
 	}
@@ -33,7 +33,7 @@ func (r *Ranking) Rank(cfg *Config) error {
 	return nil
 }
 
-func (r *Ranking) QuickRank(cfg *Config) error {
+func (r *Ranking) QuickRank(cfg Config) error {
 	if r.Len() == 0 {
 		return fmt.Errorf("no items to rank")
 	}
@@ -51,7 +51,7 @@ func (r *Ranking) sortItems() {
 	})
 }
 
-func (r *Ranking) dropUninterestingItems(cfg *Config) {
+func (r *Ranking) dropUninterestingItems(cfg Config) {
 	var filteredItems []FeedItem
 	for _, item := range r.Articles {
 		if item.Score >= cfg.MinimumRank {
@@ -61,7 +61,7 @@ func (r *Ranking) dropUninterestingItems(cfg *Config) {
 	r.Articles = filteredItems
 }
 
-func (r *Ranking) pickTopItems(cfg *Config) []FeedItem {
+func (r *Ranking) pickTopItems(cfg Config) []FeedItem {
 	topItems := r.Articles
 	if r.Len() > cfg.MaxFeeds {
 		topItems = r.Articles[:cfg.MaxFeeds]

@@ -19,7 +19,7 @@ type LLMClient struct {
 }
 
 // NewLLMClient creates a new OpenAI client
-func NewLLMClient(cfg *Config) *LLMClient {
+func NewLLMClient(cfg Config) *LLMClient {
 	apiKey, err := fetchAPIKey()
 	if err != nil {
 		log.Fatalf("failed to get API key: %v", err)
@@ -28,7 +28,7 @@ func NewLLMClient(cfg *Config) *LLMClient {
 	config.BaseURL = cfg.OpenAIEndpoint
 	return &LLMClient{
 		client: openai.NewClientWithConfig(config),
-		config: cfg,
+		config: &cfg,
 	}
 }
 

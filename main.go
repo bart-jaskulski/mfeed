@@ -78,7 +78,7 @@ func main() {
 	os.Stdout.Write([]byte(feed))
 }
 
-func processFeed(feedURL string, cfg *Config) (Ranking, error) {
+func processFeed(feedURL string) (Ranking, error) {
 	items, fetchErr := FetchFeed(feedURL, cfg.HistoricalDate)
 	if fetchErr != nil {
 		return Ranking{}, fetchErr
