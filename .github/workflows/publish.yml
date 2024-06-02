@@ -21,7 +21,8 @@ jobs:
     - name: Run Go script
       run: |
         mkdir build
-        go run main.go > ./build/feed
+        go build
+        ./mfeed > ./build/feed
       env:
         GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
