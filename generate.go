@@ -69,18 +69,9 @@ func GenerateFeed(ranking Ranking) (string, error) {
 }
 
 func createAtomFeed(ranking Ranking) Feed {
+	enrichArticlesWithContent(&ranking)
+
 	for _, item := range ranking.Articles {
-		if item.Content != "" {
-			// content already available
-			continue
-		}
-
-		item.Content = fetchContent(item)
-
-		if false && item.Content != "" && item.Score == cfg.MinimalScore {
-			item.Content = createSummary(item, cfg)
-		}
-
 		entry := entry{
 			Title: fmt.Sprintf("[%d] %s", item.Score, item.Title),
 			Link: struct {
@@ -101,6 +92,21 @@ func createAtomFeed(ranking Ranking) Feed {
 		feed.Entry = append(feed.Entry, entry)
 	}
 	return feed
+}
+
+func enrichArticlesWithContent(ranking *Ranking) {
+	for i, item := range ranking.Articles {
+		if ranking.Articles[i].Content != "" {
+			// content already available
+			continue
+		}
+
+		ranking.Articles[i].Content = fetchContent(ranking.Articles[i])
+
+		if false && item.Content != "" && item.Score == cfg.MinimalScore {
+			item.Content = createSummary(item, cfg)
+		}
+	}
 }
 
 func fetchContent(feedItem FeedItem) string {
