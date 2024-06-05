@@ -27,19 +27,14 @@ var (
 )
 
 func main() {
-	urls, readErr := readFeedsFile(cfg.FeedsFilePath)
-	if readErr != nil {
-		log.Fatalf("error reading feed URLs: %v", readErr)
-	}
-
-	if len(urls) == 0 {
+	if len(cfg.Feeds) == 0 {
 		log.Fatalf("no feed URLs found")
 	}
 
 	var wg sync.WaitGroup
-	rankingsChan := make(chan Ranking, len(urls))
+	rankingsChan := make(chan Ranking, len(cfg.Feeds))
 
-	for _, url := range urls {
+	for _, url := range cfg.Feeds {
 		wg.Add(1)
 		go func(feedURL string) {
 			defer wg.Done()
