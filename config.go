@@ -20,7 +20,7 @@ type Config struct {
 
 func defaultConfig() Config {
 	return Config{
-		LLMModel:       "llama3-70b-8192",
+		LLMModel:       "llama3-groq-70b-8192-tool-use-preview",
 		OpenAIEndpoint: "https://api.groq.com/openai/v1",
 		MaxFeeds:       120,
 		HistoricalDate: time.Now().AddDate(0, 0, DefaultLookBackDays),
